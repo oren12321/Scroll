@@ -1,4 +1,4 @@
-# PowerShell Diagnostic & Rotating Logging Framework
+# Scroll: PowerShell Diagnostic & Rotating Logging Framework
 
 A high-traceability logging toolkit designed for complex automation and system deployments. This framework captures deep metadata from the [PowerShell CallStack](https://learn.microsoft.com) and provides automated file rotation to maintain system performance and disk health.
 
@@ -10,6 +10,30 @@ A high-traceability logging toolkit designed for complex automation and system d
 - **Universal Log Analysis**: Includes a streaming viewer that parses log files back into structured objects with wildcard filtering.
 - **Metadata Alignment**: Uses fixed-width padding for log levels and source info, making logs easily readable in standard text editors or [CMTrace](https://learn.microsoft.com).
 - **Stream Integration**: Leverages [PowerShell Information Streams](https://learn.microsoft.com) for structured output.
+
+---
+
+## 🎯 Log Filtering Control
+
+Scroll features a granular, scope-aware filtering system. It allows you to "catch" and save only the specific events you want, preventing log bloat by gating entries before they reach the disk.
+
+### Filter Hierarchy
+The engine looks for filter variables in all scopes (Local, Script, Global). If no specific script filter is found, it falls back to the global preference.
+
+1. **Script-Specific Filter**: `${ScriptName}_LevelFilter`
+   *Targeted control for high-noise scripts (e.g., `Deploy_LevelFilter = @("ERROR")`).*
+2. **Global Filter**: `LevelFilter`
+   *The baseline for all logging activity.*
+
+### Filter Logic Reference
+You can define the filter using strings or arrays to control the "intake" of the log file:
+
+| Value | Behavior |
+| :--- | :--- |
+| `$null` | **Wide Open**: All events are caught and saved. |
+| `@()` | **Silenced**: No events are recorded. |
+| `"ERROR"` | **Single Level**: Only records entries matching this specific level. |
+| `@("INFO", "WARN")` | **Multi-Level**: Records only the specified severities. |
 
 ---
 
@@ -39,6 +63,17 @@ The analysis engine. It streams log files as structured objects. Use the `-Tail`
 ---
 
 ## Usage Examples
+
+### Dynamic Level Filtering
+Set a global baseline but allow a specific mission-critical script to provide more detail.
+
+```powershell
+# Global: Only save Errors and Warnings
+$LevelFilter = @("ERROR", "WARN")
+
+# Script-Wise: Allow 'Provisioning.ps1' to also save Info logs
+$Provisioning_LevelFilter = @("ERROR", "WARN", "INFO")
+```
 
 ### Nested Metadata Logging
 This example demonstrates how to combine metadata capture with timestamping.
